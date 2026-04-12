@@ -34,7 +34,7 @@ function App() {
   `;
     }
 
-    const res = await axios.post("http://localhost:5000/optimize", {
+    const res = await axios.post("https://promptcanvas.onrender.com/optimize", {
       prompt: finalPrompt,
     });
 
