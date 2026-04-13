@@ -2,6 +2,11 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const OpenAI = require("openai");
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 
 const app = express();
@@ -12,7 +17,7 @@ app.get("/", (req, res) => {
   res.send("Backend running");
 });
 
-app.post("/optimize", (req, res) => {
+app.post("/optimize", async (req, res) => {
   try {
     const { prompt } = req.body;
 
@@ -20,39 +25,18 @@ app.post("/optimize", (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    let result = "";
+    const response = await client.responses.create({
+      model: "gpt-4.1-mini",
+      input: prompt,
+    });
 
-    if (prompt.includes("Compare these two prompts")) {
-      result = `
-Comparison Result:
-
-👉 Better Prompt: Prompt A
-
-Reason:
-- More clarity
-- Better structure
-- More descriptive
-`;
-    } 
-    else if (prompt.includes("Create a detailed prompt")) {
-      result = `
-Generated Prompt:
-
-Create a detailed explanation about "${prompt}" with examples.
-`;
-    } 
-    else {
-      result = `
-Improved Prompt:
-
-Explain "${prompt}" clearly with examples and real-world use.
-`;
-    }
+    const result = response.output[0].content[0].text;
 
     res.json({ result });
 
   } catch (error) {
-    res.status(500).json({ error: "Error occurred" });
+    console.error(error);
+    res.status(500).json({ error: "AI Error" });
   }
 });
 
