@@ -47,7 +47,7 @@ function App() {
 
     } catch (error) {
       // 🔥 Handle error (very important)
-      setResult("Server waking up... please try again in few seconds 🚀");
+      setResult("⏳ Server is starting... try again in 10 seconds");
     }
  };
 
