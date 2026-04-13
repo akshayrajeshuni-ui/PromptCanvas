@@ -45,10 +45,14 @@ function App() {
 
       setResult(res.data.result);
 
-    } catch (err) {
-     console.error(err);
-     setResult("❌ Error connecting to server");
-    }
+    } 
+      catch (err) {
+        console.error("FULL ERROR:", err);
+
+        setResult(
+          "❌ " + (err.response?.data?.error || err.message)
+        );
+      }
  };
 
   return (
