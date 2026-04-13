@@ -14,10 +14,10 @@ function App() {
   };
 
   const handleOptimize = async () => {
-    let finalPrompt = "";
+   let finalPrompt = "";
 
-    if (mode === "optimize") {
-      finalPrompt = prompt;
+   if (mode === "optimize") {
+    finalPrompt = prompt;
     }
 
     if (mode === "generate") {
@@ -34,12 +34,22 @@ function App() {
   `;
     }
 
-    const res = await axios.post("https://promptcanvas.onrender.com/optimize", {
-      prompt: finalPrompt,
-    });
+    try {
+      // 🔥 Show loading
+      setResult("Loading... ⏳");
 
-    setResult(res.data.result);
-  };
+      const res = await axios.post(
+        "https://promptcanvas.onrender.com/optimize",
+        { prompt: finalPrompt }
+      );
+
+      setResult(res.data.result);
+
+    } catch (error) {
+      // 🔥 Handle error (very important)
+      setResult("Server waking up... please try again in few seconds 🚀");
+    }
+ };
 
   return (
     <div style={styles.container}>
