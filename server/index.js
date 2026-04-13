@@ -13,7 +13,47 @@ app.get("/", (req, res) => {
 });
 
 app.post("/optimize", (req, res) => {
-  res.json({ result: "Hello from backend" });
+  try {
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required" });
+    }
+
+    let result = "";
+
+    if (prompt.includes("Compare these two prompts")) {
+      result = `
+Comparison Result:
+
+👉 Better Prompt: Prompt A
+
+Reason:
+- More clarity
+- Better structure
+- More descriptive
+`;
+    } 
+    else if (prompt.includes("Create a detailed prompt")) {
+      result = `
+Generated Prompt:
+
+Create a detailed explanation about "${prompt}" with examples.
+`;
+    } 
+    else {
+      result = `
+Improved Prompt:
+
+Explain "${prompt}" clearly with examples and real-world use.
+`;
+    }
+
+    res.json({ result });
+
+  } catch (error) {
+    res.status(500).json({ error: "Error occurred" });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
