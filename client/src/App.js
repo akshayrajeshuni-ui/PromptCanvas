@@ -45,9 +45,9 @@ function App() {
 
       setResult(res.data.result);
 
-    } catch (error) {
-      // 🔥 Handle error (very important)
-      setResult("⏳ Server is starting... try again in 10 seconds");
+    } catch (err) {
+     console.error(err);
+     setResult("❌ Error connecting to server");
     }
  };
 
