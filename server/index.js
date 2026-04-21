@@ -19,13 +19,13 @@ app.get("/", (req, res) => {
 
 app.post("/optimize", async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { messages } = req.body;
 
-    if (!prompt) {
-      return res.status(400).json({ error: "Prompt is required" });
+    if (!messages) {
+      return res.status(400).json({ error: "Messages required" });
     }
 
-    const formattedMessages = req.body.messages.map((msg) => ({
+    const formattedMessages = messages.map((msg) => ({
       role: msg.role === "ai" ? "assistant" : "user",
       content: msg.text,
     }));
@@ -40,7 +40,7 @@ app.post("/optimize", async (req, res) => {
     res.json({ result });
 
   } catch (error) {
-    console.error(error);
+    console.error("AI ERROR:", error); // 👈 VERY IMPORTANT
     res.status(500).json({ error: "AI Error" });
   }
 });
