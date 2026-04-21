@@ -4,11 +4,21 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 function App() {
-  const [loading, setLoading] = useState(false);
+  
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]);
+  
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem("chat");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [loading, setLoading] = useState(false);
 
   const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    localStorage.setItem("chat", JSON.stringify(messages));
+  }, [messages]);
 
   // ✅ Auto scroll to latest message
   useEffect(() => {
@@ -165,7 +175,7 @@ const styles = {
     borderRadius: "10px",
     margin: "5px",
     maxWidth: "60%",
-    lineHeight: "1.6",
+    line: "1.6",
   },
   inputArea: {
     display: "flex",
