@@ -1,143 +1,121 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
 function App() {
-  const [prompt, setPrompt] = useState("");
-  const [result, setResult] = useState("");
-  const [mode, setMode] = useState("optimize");
-  const [promptA, setPromptA] = useState("");
-  const [promptB, setPromptB] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(result);
-    alert("Copied!");
-  };
+  const chatEndRef = useRef(null);
 
-  const handleOptimize = async () => {
-   let finalPrompt = "";
+  // ✅ Auto scroll to latest message
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-   if (mode === "optimize") {
-    finalPrompt = prompt;
-    }
+  const handleSend = async () => {
+    if (!input.trim()) return;
 
-    if (mode === "generate") {
-      finalPrompt = `Create a detailed prompt for: ${prompt}`;
-    }
+    const userMessage = { role: "user", text: input };
+    const newMessages = [...messages, userMessage];
 
-    if (mode === "compare") {
-      finalPrompt = `
-  Compare these two prompts and tell which is better and why:
-
-  Prompt A: ${promptA}
-
-  Prompt B: ${promptB}
-  `;
-    }
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true); // ✅ turn ON loading
 
     try {
-      // 🔥 Show loading
-      setResult("Loading... ⏳");
-
       const res = await axios.post(
         "https://promptcanvas.onrender.com/optimize",
-        { prompt: finalPrompt }
+        { prompt: input }
       );
 
-      setResult(res.data.result);
+      const aiText = res.data.result;
 
-    } 
-      catch (err) {
-        console.error("FULL ERROR:", err);
+      // remove loading BEFORE typing animation
+      setLoading(false);
 
-        setResult(
-          "❌ " + (err.response?.data?.error || err.message)
-        );
-      }
- };
+      // add empty AI message
+      setMessages((prev) => [...prev, { role: "ai", text: "" }]);
+
+      let index = 0;
+
+      const interval = setInterval(() => {
+        index++;
+
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1].text = aiText.slice(0, index);
+          return updated;
+        });
+
+        if (index >= aiText.length) {
+          clearInterval(interval);
+        }
+      }, 15);
+
+    } catch (err) {
+      setLoading(false);
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", text: "❌ Error connecting to AI" },
+      ]);
+    }
+  };
 
   return (
     <div style={styles.container}>
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <h2>🎨 PromptCanvas</h2>
-        <p>Canvas</p>
+        <p>Chat</p>
         <p>Optimize</p>
         <p>Compare</p>
-        <p>My Prompts</p>
       </div>
 
-      {/* Main */}
-      <div style={styles.main}>
-        <h1>Design Your Prompt</h1>
+      {/* Chat */}
+      <div style={styles.chatContainer}>
+        <h1>AI Prompt Chat</h1>
 
-        <div style={styles.tabs}>
-          <button onClick={() => setMode("optimize")}>Optimize</button>
-          <button onClick={() => setMode("generate")}>Generate</button>
-          <button onClick={() => setMode("compare")}>Compare</button>
+        <div style={styles.chatBox}>
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              style={
+                msg.role === "user"
+                  ? styles.userBubble
+                  : styles.aiBubble
+              }
+            >
+              {msg.text}
+            </div>
+          ))}
+
+          {loading && (
+            <div style={styles.aiBubble}>
+              ⏳ AI is typing...
+            </div>
+          )}
+
+          {/* ✅ Auto scroll target */}
+          <div ref={chatEndRef} />
         </div>
 
-        {mode === "compare" ? (
-          <>
-            <textarea
-              style={styles.textarea}
-              placeholder="Enter Prompt A..."
-              value={promptA}
-              onChange={(e) => setPromptA(e.target.value)}
-            />
+        <div style={styles.inputArea}>
+          <input
+            style={styles.input}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your prompt..."
 
-            <textarea
-              style={styles.textarea}
-              placeholder="Enter Prompt B..."
-              value={promptB}
-              onChange={(e) => setPromptB(e.target.value)}
-            />
-          </>
-        ) : (
-          <textarea
-            style={styles.textarea}
-            placeholder="Write your prompt here..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            // ✅ Enter key support
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSend();
+            }}
           />
-        )}
 
-        <div style={styles.tabs}>
-          <button
-            style={mode === "optimize" ? styles.activeTab : styles.tab}
-            onClick={() => setMode("optimize")}
-          >
-           Optimize
+          <button style={styles.sendBtn} onClick={handleSend}>
+            Send
           </button>
-
-          <button
-            style={mode === "generate" ? styles.activeTab : styles.tab}
-            onClick={() => setMode("generate")}
-          >
-           Generate
-          </button>
-
-          <button
-            style={mode === "compare" ? styles.activeTab : styles.tab}
-            onClick={() => setMode("compare")}
-          >
-           Compare
-          </button>
-        </div>
-
-        <button style={styles.button} onClick={handleOptimize}>
-          {mode === "optimize" && "Optimize Prompt"}
-          {mode === "generate" && "Generate Prompt"}
-          {mode === "compare" && "Compare Prompts"}
-        </button>
-
-        <div style={styles.output}>
-         <div style={{ display: "flex", justifyContent: "space-between" }}>
-           <h3>Result:</h3>
-           <button style={styles.copyBtn} onClick={handleCopy}>
-             Copy
-           </button>
-         </div>
-         <p>{result}</p>
         </div>
       </div>
     </div>
@@ -156,59 +134,49 @@ const styles = {
     background: "#1e293b",
     padding: "20px",
   },
-  main: {
+  chatContainer: {
     flex: 1,
-    padding: "30px",
+    padding: "20px",
+    display: "flex",
+    flexDirection: "column",
   },
-  textarea: {
-    width: "100%",
-    height: "120px",
+  chatBox: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "10px",
+    marginBottom: "10px",
+  },
+  userBubble: {
+    alignSelf: "flex-end",
+    background: "#6366f1",
+    padding: "10px",
+    borderRadius: "10px",
+    margin: "5px",
+    maxWidth: "60%",
+  },
+  aiBubble: {
+    alignSelf: "flex-start",
+    background: "#1e293b",
+    padding: "10px",
+    borderRadius: "10px",
+    margin: "5px",
+    maxWidth: "60%",
+  },
+  inputArea: {
+    display: "flex",
+    gap: "10px",
+  },
+  input: {
+    flex: 1,
     padding: "10px",
     borderRadius: "8px",
     border: "none",
-    marginTop: "20px",
   },
-  button: {
-    marginTop: "20px",
+  sendBtn: {
     padding: "10px 20px",
-    background: "#6366f1",
-    border: "none",
-    borderRadius: "8px",
-    color: "white",
-    cursor: "pointer",
-  },
-  output: {
-    marginTop: "30px",
-    background: "#1e293b",
-    padding: "20px",
-    borderRadius: "10px",
-  },
-  copyBtn: {
     background: "#22c55e",
     border: "none",
-    padding: "5px 10px",
-    borderRadius: "6px",
-    color: "white",
-    cursor: "pointer",
-  },
-  tabs: {
-    display: "flex",
-    gap: "10px",
-    marginBottom: "20px",
-  },
-  tab: {
-    padding: "8px 15px",
-    background: "#334155",
-    border: "none",
-    borderRadius: "6px",
-    color: "white",
-    cursor: "pointer",
-  },
-  activeTab: {
-    padding: "8px 15px",
-    background: "#6366f1",
-    border: "none",
-    borderRadius: "6px",
+    borderRadius: "8px",
     color: "white",
     cursor: "pointer",
   },
