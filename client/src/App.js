@@ -4,15 +4,22 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 function App() {
-  
+
   const [input, setInput] = useState("");
-  
+
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem("chat");
     return saved ? JSON.parse(saved) : [];
   });
 
   const [loading, setLoading] = useState(false);
+  const getImageUrl = (text) => {
+    return `https://source.unsplash.com/600x400/?${encodeURIComponent(text)}`;
+  };
+  const getImages = (text) => [
+    `https://source.unsplash.com/400x300/?${text}&1`,
+    `https://source.unsplash.com/400x300/?${text}&2`,
+  ];
 
   const chatEndRef = useRef(null);
 
@@ -47,7 +54,12 @@ function App() {
       setLoading(false);
 
       // add empty AI message
-      setMessages((prev) => [...prev, { role: "ai", text: "" }]);
+      const imageUrl = getImageUrl(input);
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", text: "", image: imageUrl },
+      ]);
 
       let index = 0;
 
@@ -69,7 +81,7 @@ function App() {
       setLoading(false);
       setMessages((prev) => [
         ...prev,
-        { role: "ai", text: "❌ Error connecting to AI" },
+        { role: "ai", text: "", image: "" },
       ]);
     }
   };
@@ -99,8 +111,24 @@ function App() {
               }
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {msg.text}
-              </ReactMarkdown>  
+                <>
+                  {msg.image && (
+                    <img
+                      src={msg.image}
+                      alt="result"
+                      style={{
+                        width: "100%",
+                        borderRadius: "10px",
+                        marginBottom: "10px",
+                      }}
+                    />
+                  )}
+
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {msg.text}
+                  </ReactMarkdown>
+                </>
+              </ReactMarkdown>
             </div>
           ))}
 
