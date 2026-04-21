@@ -17,8 +17,8 @@ function App() {
 
   // ✅ Better image function (stable)
   const getImageUrl = (text) => {
-    const keyword = text.split(" ").slice(0, 3).join(" ");
-    return `https://source.unsplash.com/600x400/?${encodeURIComponent(keyword)}`;
+    const keyword = text.split(" ").slice(0, 2).join(" ");
+    return `https://picsum.photos/seed/${encodeURIComponent(keyword)}/600/400`;
   };
 
   // ✅ Save chat
@@ -44,7 +44,9 @@ function App() {
     try {
       const res = await axios.post(
         "https://promptcanvas.onrender.com/optimize",
-        { prompt: input }
+        {
+          messages: [...messages, { role: "user", text: input }],
+        }
       );
 
       const aiText = res.data.result;

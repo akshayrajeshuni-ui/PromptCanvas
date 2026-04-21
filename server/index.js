@@ -25,12 +25,17 @@ app.post("/optimize", async (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
+    const formattedMessages = req.body.messages.map((msg) => ({
+      role: msg.role === "ai" ? "assistant" : "user",
+      content: msg.text,
+    }));
+
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
-      input: prompt,
+      input: formattedMessages,
     });
 
-    const result = response.output[0].content[0].text;
+    const result = response.output_text;
 
     res.json({ result });
 
