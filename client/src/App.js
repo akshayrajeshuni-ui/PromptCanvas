@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -86,7 +88,9 @@ function App() {
                   : styles.aiBubble
               }
             >
-              {msg.text}
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {msg.text}
+              </ReactMarkdown>  
             </div>
           ))}
 
@@ -161,6 +165,7 @@ const styles = {
     borderRadius: "10px",
     margin: "5px",
     maxWidth: "60%",
+    lineHeight: "1.6",
   },
   inputArea: {
     display: "flex",
