@@ -4,7 +4,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 function App() {
-
   const [input, setInput] = useState("");
 
   const [messages, setMessages] = useState(() => {
@@ -13,17 +12,21 @@ function App() {
   });
 
   const [loading, setLoading] = useState(false);
-  const getImageUrl = (text) => {
-    return `https://source.unsplash.com/600x400/?${encodeURIComponent(text)}`;
-  };
 
   const chatEndRef = useRef(null);
 
+  // ✅ Better image function (stable)
+  const getImageUrl = (text) => {
+    const keyword = text.split(" ").slice(0, 3).join(" ");
+    return `https://source.unsplash.com/600x400/?${encodeURIComponent(keyword)}`;
+  };
+
+  // ✅ Save chat
   useEffect(() => {
     localStorage.setItem("chat", JSON.stringify(messages));
   }, [messages]);
 
-  // ✅ Auto scroll to latest message
+  // ✅ Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -36,7 +39,7 @@ function App() {
 
     setMessages(newMessages);
     setInput("");
-    setLoading(true); // ✅ turn ON loading
+    setLoading(true);
 
     try {
       const res = await axios.post(
@@ -45,13 +48,11 @@ function App() {
       );
 
       const aiText = res.data.result;
-
-      // remove loading BEFORE typing animation
-      setLoading(false);
-
-      // add empty AI message
       const imageUrl = getImageUrl(input);
 
+      setLoading(false);
+
+      // Add empty AI message
       setMessages((prev) => [
         ...prev,
         { role: "ai", text: "", image: imageUrl },
@@ -72,12 +73,11 @@ function App() {
           clearInterval(interval);
         }
       }, 15);
-
     } catch (err) {
       setLoading(false);
       setMessages((prev) => [
         ...prev,
-        { role: "ai", text: "", image: "" },
+        { role: "ai", text: "❌ Error connecting to AI" },
       ]);
     }
   };
@@ -106,44 +106,43 @@ function App() {
                   : styles.aiBubble
               }
             >
-              <>
-                {msg.image && (
-                  <img
-                    src={msg.image}
-                    alt="result"
-                    style={{
-                      width: "100%",
-                      borderRadius: "10px",
-                      marginBottom: "10px",
-                    }}
-                  />
-                )}
+              {/* ✅ Image */}
+              {msg.image && (
+                <img
+                  src={msg.image}
+                  alt="result"
+                  style={{
+                    width: "100%",
+                    borderRadius: "10px",
+                    marginBottom: "10px",
+                  }}
+                />
+              )}
 
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {msg.text}
-                </ReactMarkdown>
-              </>
+              {/* ✅ Markdown */}
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {msg.text}
+              </ReactMarkdown>
             </div>
           ))}
 
+          {/* ✅ Typing indicator */}
           {loading && (
             <div style={styles.aiBubble}>
               ⏳ AI is typing...
             </div>
           )}
 
-          {/* ✅ Auto scroll target */}
           <div ref={chatEndRef} />
         </div>
 
+        {/* Input */}
         <div style={styles.inputArea}>
           <input
             style={styles.input}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your prompt..."
-
-            // ✅ Enter key support
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
