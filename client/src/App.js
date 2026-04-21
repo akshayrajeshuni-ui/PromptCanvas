@@ -16,10 +16,6 @@ function App() {
   const getImageUrl = (text) => {
     return `https://source.unsplash.com/600x400/?${encodeURIComponent(text)}`;
   };
-  const getImages = (text) => [
-    `https://source.unsplash.com/400x300/?${text}&1`,
-    `https://source.unsplash.com/400x300/?${text}&2`,
-  ];
 
   const chatEndRef = useRef(null);
 
@@ -110,25 +106,23 @@ function App() {
                   : styles.aiBubble
               }
             >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                <>
-                  {msg.image && (
-                    <img
-                      src={msg.image}
-                      alt="result"
-                      style={{
-                        width: "100%",
-                        borderRadius: "10px",
-                        marginBottom: "10px",
-                      }}
-                    />
-                  )}
+              <>
+                {msg.image && (
+                  <img
+                    src={msg.image}
+                    alt="result"
+                    style={{
+                      width: "100%",
+                      borderRadius: "10px",
+                      marginBottom: "10px",
+                    }}
+                  />
+                )}
 
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {msg.text}
-                  </ReactMarkdown>
-                </>
-              </ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {msg.text}
+                </ReactMarkdown>
+              </>
             </div>
           ))}
 
@@ -151,7 +145,10 @@ function App() {
 
             // ✅ Enter key support
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleSend();
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSend();
+              }
             }}
           />
 
@@ -203,7 +200,7 @@ const styles = {
     borderRadius: "10px",
     margin: "5px",
     maxWidth: "60%",
-    line: "1.6",
+    lineHeight: "1.6",
   },
   inputArea: {
     display: "flex",
